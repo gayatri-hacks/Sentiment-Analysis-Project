@@ -1,0 +1,25 @@
+name: CI
+on: [push, pull_request]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - run: pip install -r requirements.txt pytest
+        working-directory: SENTIMENT-ANALYSIS--main
+      - run: python -m nltk.downloader stopwords
+        working-directory: SENTIMENT-ANALYSIS--main
+      - run: python -m src.sentiment_analysis
+        working-directory: SENTIMENT-ANALYSIS--main
+      - run: pytest -q
+        working-directory: SENTIMENT-ANALYSIS--main
+  docker-smoke:
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -t climate-stance-dashboard SENTIMENT-ANALYSIS--main
+      - run: docker run -d --name dashboard -p 8080:8080 climate-stance-dashboard
+      - run: for i in {1..20}; do curl -fsS http://localhost:8080/_stcore/health && exit 0; sleep 3; done; docker logs dashboard; exit 1
