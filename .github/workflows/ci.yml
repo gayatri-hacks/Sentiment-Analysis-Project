@@ -13,7 +13,9 @@ jobs:
         working-directory: SENTIMENT-ANALYSIS--main
       - run: python -m src.sentiment_analysis
         working-directory: SENTIMENT-ANALYSIS--main
-      - run: pytest -q
+      # Running pytest as a module puts this application directory on sys.path,
+      # allowing the local `src` package to be imported on a clean runner.
+      - run: python -m pytest -q
         working-directory: SENTIMENT-ANALYSIS--main
   docker-smoke:
     runs-on: ubuntu-latest
@@ -21,5 +23,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: docker build -t climate-stance-dashboard SENTIMENT-ANALYSIS--main
+      - name: Verify real artifacts, dataset, and inference in image
+        run: >-
+          docker run --rm --entrypoint python climate-stance-dashboard -c
+          "import joblib, pandas as pd; from src.text_preprocessing import clean_text;
+          data = pd.read_csv('src/twitter_sentiment_data.csv');
+          assert len(data) == 43943 and {'message', 'sentiment', 'tweetid'} <= set(data.columns);
+          model = joblib.load('models/model.pkl'); vectorizer = joblib.load('models/tfidf.pkl');
+          prediction = int(model.predict(vectorizer.transform([clean_text(data.message.iloc[0])]))[0]);
+          assert prediction in {-1, 0, 1, 2}; print(f'real_rows={len(data)} prediction={prediction}')"
       - run: docker run -d --name dashboard -p 8080:8080 climate-stance-dashboard
       - run: for i in {1..20}; do curl -fsS http://localhost:8080/_stcore/health && exit 0; sleep 3; done; docker logs dashboard; exit 1
