@@ -59,6 +59,7 @@ def test_metadata_contains_real_evaluation():
 
 def test_executive_report_is_derived_from_real_metadata():
     report = (ROOT / "reports" / "EXECUTIVE_REPORT.md").read_text(encoding="utf-8")
+    metadata = json.loads((ROOT / "models" / "metadata.json").read_text())
     assert "original rows: 43,943" in report
-    assert "macro F1: 0.623" in report
+    assert f"macro F1: {metadata['evaluation']['macro_f1']:.3f}" in report
     assert "not evidence of production readiness" in report
