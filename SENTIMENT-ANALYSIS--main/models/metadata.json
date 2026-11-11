@@ -1,0 +1,136 @@
+{
+  "dataset": {
+    "path": "src/twitter_sentiment_data.csv",
+    "provenance": "Repository-provided Twitter climate-change stance dataset; labels follow the project dataset documentation."
+  },
+  "label_map": {
+    "-1": "Anti",
+    "0": "Neutral",
+    "1": "Pro",
+    "2": "News"
+  },
+  "random_seed": 42,
+  "split": "Grouped exact-message split of original rows: approximately 70% train, 15% validation, 15% test. TF-IDF fit and random oversampling are training-only.",
+  "calibration": "Sigmoid calibration fit only on the grouped validation partition. Test metrics use the independently held-out grouped test partition.",
+  "data_quality": {
+    "initial_rows": 43943,
+    "rows_after_missing_value_removal": 43943,
+    "rows_with_missing_message_or_sentiment": 0,
+    "rows_with_missing_message": 0,
+    "rows_with_missing_label": 0,
+    "rows_with_missing_tweetid": 0,
+    "empty_message_rows": 0,
+    "unique_exact_message_groups": 41028,
+    "duplicate_message_rows": 3455,
+    "duplicate_message_groups": 2915,
+    "class_distribution": {
+      "-1": 3990,
+      "0": 7715,
+      "1": 22962,
+      "2": 9276
+    }
+  },
+  "split_class_distribution": {
+    "train": {
+      "-1": 2804,
+      "0": 5291,
+      "1": 16165,
+      "2": 6504
+    },
+    "validation": {
+      "-1": 613,
+      "0": 1213,
+      "1": 3339,
+      "2": 1403
+    },
+    "test": {
+      "-1": 573,
+      "0": 1211,
+      "1": 3458,
+      "2": 1369
+    },
+    "train_after_oversampling": {
+      "1": 16165,
+      "2": 16165,
+      "0": 16165,
+      "-1": 16165
+    }
+  },
+  "evaluation": {
+    "validation_accuracy": 0.7005176613885505,
+    "accuracy": 0.7094236877930722,
+    "macro_f1": 0.6229602151920918,
+    "weighted_f1": 0.6936726404266584,
+    "per_class": {
+      "Anti": {
+        "precision": 0.6843657817109144,
+        "recall": 0.4048865619546248,
+        "f1-score": 0.5087719298245614,
+        "support": 573.0
+      },
+      "Neutral": {
+        "precision": 0.5997474747474747,
+        "recall": 0.3922378199834847,
+        "f1-score": 0.4742885671492761,
+        "support": 1211.0
+      },
+      "Pro": {
+        "precision": 0.7197919129817923,
+        "recall": 0.8802776171197224,
+        "f1-score": 0.7919864706647587,
+        "support": 3458.0
+      },
+      "News": {
+        "precision": 0.750599520383693,
+        "recall": 0.6859021183345507,
+        "f1-score": 0.716793893129771,
+        "support": 1369.0
+      },
+      "accuracy": 0.7094236877930722,
+      "macro avg": {
+        "precision": 0.6886261724559686,
+        "recall": 0.5908260293480957,
+        "f1-score": 0.6229602151920918,
+        "support": 6611.0
+      },
+      "weighted avg": {
+        "precision": 0.7011113240562487,
+        "recall": 0.7094236877930722,
+        "f1-score": 0.6936726404266584,
+        "support": 6611.0
+      }
+    },
+    "confusion_matrix_labels": [
+      -1,
+      0,
+      1,
+      2
+    ],
+    "confusion_matrix": [
+      [
+        232,
+        97,
+        221,
+        23
+      ],
+      [
+        55,
+        475,
+        593,
+        88
+      ],
+      [
+        36,
+        177,
+        3044,
+        201
+      ],
+      [
+        16,
+        43,
+        371,
+        939
+      ]
+    ]
+  }
+}
