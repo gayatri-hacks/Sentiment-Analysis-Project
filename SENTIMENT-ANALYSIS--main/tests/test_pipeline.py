@@ -29,6 +29,12 @@ def test_duplicate_groups_do_not_cross_partitions():
     assert not set(train.split_group) & set(test.split_group)
     assert not set(validation.split_group) & set(test.split_group)
 
+def test_grouped_split_keeps_tiny_fixture_duplicates_together():
+    fixture = pd.DataFrame({"split_group": ["same", "same", "different", "third", "fourth", "fifth"], "sentiment": [-1, -1, 0, 1, 2, 1]})
+    train, validation, test = grouped_split(fixture, seed=7)
+    assert {"same"}.issubset(set(train.split_group) | set(validation.split_group) | set(test.split_group))
+    assert sum(frame.split_group.eq("same").sum() for frame in (train, validation, test)) == 2
+
 def test_trained_artifacts_load_and_predict():
     import joblib
     model = joblib.load(ROOT / "models" / "model.pkl")
@@ -49,3 +55,10 @@ def test_batch_processing_shape():
 def test_metadata_contains_real_evaluation():
     metadata = json.loads((ROOT / "models" / "metadata.json").read_text())
     assert {"accuracy", "macro_f1", "weighted_f1", "per_class", "confusion_matrix"} <= set(metadata["evaluation"])
+    assert "Sigmoid calibration" in metadata["calibration"]
+
+def test_executive_report_is_derived_from_real_metadata():
+    report = (ROOT / "reports" / "EXECUTIVE_REPORT.md").read_text(encoding="utf-8")
+    assert "original rows: 43,943" in report
+    assert "macro F1: 0.623" in report
+    assert "not evidence of production readiness" in report

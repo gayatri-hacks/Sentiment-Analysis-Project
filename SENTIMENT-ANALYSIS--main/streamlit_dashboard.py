@@ -35,13 +35,20 @@ def predict(text: str, model, vectorizer) -> tuple[int, str, float]:
     raw = int(model.predict(features)[0])
     return raw, LABEL_MAP[raw], float(model.predict_proba(features)[0].max())
 
+def labelled_data(data: pd.DataFrame) -> pd.DataFrame:
+    view = data[["message", "sentiment", "tweetid"]].copy()
+    view["stance"] = view.sentiment.map(LABEL_MAP)
+    view["message_length"] = view.message.astype(str).str.len()
+    return view
+
 def home(data, metadata):
     st.header("Climate-change stance dashboard")
     st.caption("Classifies tweet stance: Anti, Neutral, Pro, or News — not generic positive/negative sentiment.")
-    cols = st.columns(4); cols[0].metric("Original tweets", f"{len(data):,}"); cols[1].metric("Stance classes", data.sentiment.nunique()); cols[2].metric("Duplicate-text rows", metadata["data_quality"]["duplicate_message_rows"]); cols[3].metric("Held-out accuracy", f"{metadata['evaluation']['accuracy']:.3f}")
+    cols = st.columns(4); cols[0].metric("Original tweets", f"{len(data):,}"); cols[1].metric("Stance classes", data.sentiment.nunique()); cols[2].metric("Duplicate-text rows", metadata["data_quality"]["duplicate_message_rows"]); cols[3].metric("Held-out macro F1", f"{metadata['evaluation']['macro_f1']:.3f}")
     counts = data.sentiment.value_counts().sort_index()
     st.plotly_chart(px.pie(values=counts.values, names=[LABEL_MAP[int(x)] for x in counts.index], color=[LABEL_MAP[int(x)] for x in counts.index], color_discrete_map=COLORS), use_container_width=True)
-    st.dataframe(data[["message", "sentiment"]].sample(min(10, len(data)), random_state=42), use_container_width=True)
+    st.caption("Metrics come from the independently held-out test partition; they are not dashboard estimates.")
+    st.dataframe(labelled_data(data).sample(min(10, len(data)), random_state=42), use_container_width=True)
 
 def prediction_page(model, vectorizer):
     st.header("Predict tweet stance"); text = st.text_area("Tweet text", height=110)
@@ -50,19 +57,32 @@ def prediction_page(model, vectorizer):
         else:
             raw, label, probability = predict(text, model, vectorizer)
             st.success(f"Predicted stance: {label} (label {raw})")
-            st.caption(f"Model probability for the predicted class: {probability:.1%}. This is a model probability, not a guaranteed confidence.")
+            st.caption(f"Calibrated model probability for the predicted class: {probability:.1%}. It is an estimated likelihood, not a guarantee or generic sentiment score.")
             st.code(clean_text(text), language=None)
 
-def data_page(data):
-    st.header("Dataset exploration"); view = data[["message", "sentiment"]].copy(); view["stance"] = view.sentiment.map(LABEL_MAP); view["message_length"] = view.message.astype(str).str.len()
-    st.dataframe(view, use_container_width=True); st.plotly_chart(px.histogram(view, x="message_length", color="stance", color_discrete_map=COLORS), use_container_width=True)
+def data_page(data, metadata):
+    st.header("Dataset exploration")
+    view = labelled_data(data)
+    choices = st.multiselect("Stance filter", list(LABEL_MAP.values()), default=list(LABEL_MAP.values()))
+    length = st.slider("Maximum message length", 0, int(view.message_length.max()), int(view.message_length.max()))
+    filtered = view[view.stance.isin(choices) & view.message_length.le(length)]
+    st.caption(f"Showing {len(filtered):,} of {len(view):,} source rows. Filters are applied before export.")
+    st.dataframe(filtered, use_container_width=True)
+    st.plotly_chart(px.histogram(filtered, x="message_length", color="stance", color_discrete_map=COLORS), use_container_width=True)
+    st.download_button("Download filtered source rows", filtered.to_csv(index=False), "filtered_climate_stance_rows.csv", "text/csv")
+    st.subheader("Data quality summary")
+    st.json(metadata["data_quality"])
+    st.download_button("Download reproducibility metadata", json.dumps(metadata, indent=2), "model_verification_metadata.json", "application/json")
 
 def batch_page(model, vectorizer):
     st.header("Batch predictions"); uploaded = st.file_uploader("CSV with a `message` column", type="csv")
     if uploaded and st.button("Classify batch"):
         batch = pd.read_csv(uploaded)
         if "message" not in batch: st.error("The uploaded CSV must have a `message` column."); return
-        matrix = vectorizer.transform(batch.message.fillna("").map(clean_text)); batch["predicted_label"] = model.predict(matrix).astype(int); batch["predicted_stance"] = batch.predicted_label.map(LABEL_MAP); batch["predicted_probability"] = model.predict_proba(matrix).max(axis=1)
+        if batch.message.isna().any() or batch.message.astype(str).str.strip().eq("").any():
+            st.error("The uploaded `message` column contains missing or empty values."); return
+        matrix = vectorizer.transform(batch.message.map(clean_text)); batch["predicted_label"] = model.predict(matrix).astype(int); batch["predicted_stance"] = batch.predicted_label.map(LABEL_MAP); batch["calibrated_probability"] = model.predict_proba(matrix).max(axis=1)
+        st.caption("`calibrated_probability` is an estimated probability for the selected stance, not a guarantee or positive/negative sentiment score.")
         st.dataframe(batch, use_container_width=True); st.download_button("Download results", batch.to_csv(index=False), "stance_predictions.csv", "text/csv")
 
 def main():
@@ -71,7 +91,7 @@ def main():
     page = st.sidebar.radio("Navigation", ["Home", "Predict", "Explore data", "Batch predictions"])
     if page == "Home": home(data, metadata)
     elif page == "Predict": prediction_page(model, vectorizer)
-    elif page == "Explore data": data_page(data)
+    elif page == "Explore data": data_page(data, metadata)
     else: batch_page(model, vectorizer)
 
 if __name__ == "__main__": main()

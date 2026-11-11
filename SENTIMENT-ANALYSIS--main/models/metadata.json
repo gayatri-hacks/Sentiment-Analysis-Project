@@ -11,10 +11,16 @@
   },
   "random_seed": 42,
   "split": "Grouped exact-message split of original rows: approximately 70% train, 15% validation, 15% test. TF-IDF fit and random oversampling are training-only.",
+  "calibration": "Sigmoid calibration fit only on the grouped validation partition. Test metrics use the independently held-out grouped test partition.",
   "data_quality": {
     "initial_rows": 43943,
     "rows_after_missing_value_removal": 43943,
     "rows_with_missing_message_or_sentiment": 0,
+    "rows_with_missing_message": 0,
+    "rows_with_missing_label": 0,
+    "rows_with_missing_tweetid": 0,
+    "empty_message_rows": 0,
+    "unique_exact_message_groups": 41028,
     "duplicate_message_rows": 3455,
     "duplicate_message_groups": 2915,
     "class_distribution": {
@@ -51,46 +57,46 @@
     }
   },
   "evaluation": {
-    "validation_accuracy": 0.6779841656516443,
-    "accuracy": 0.68597791559522,
-    "macro_f1": 0.6363957395721072,
-    "weighted_f1": 0.6907548658638933,
+    "validation_accuracy": 0.7005176613885505,
+    "accuracy": 0.7094236877930722,
+    "macro_f1": 0.6229602151920918,
+    "weighted_f1": 0.6936726404266584,
     "per_class": {
       "Anti": {
-        "precision": 0.4832116788321168,
-        "recall": 0.5776614310645725,
-        "f1-score": 0.5262321144674086,
+        "precision": 0.6843657817109144,
+        "recall": 0.4048865619546248,
+        "f1-score": 0.5087719298245614,
         "support": 573.0
       },
       "Neutral": {
-        "precision": 0.4974169741697417,
-        "recall": 0.5565648224607762,
-        "f1-score": 0.5253312548713952,
+        "precision": 0.5997474747474747,
+        "recall": 0.3922378199834847,
+        "f1-score": 0.4742885671492761,
         "support": 1211.0
       },
       "Pro": {
-        "precision": 0.8108731466227348,
-        "recall": 0.711683053788317,
-        "f1-score": 0.7580471276759587,
+        "precision": 0.7197919129817923,
+        "recall": 0.8802776171197224,
+        "f1-score": 0.7919864706647587,
         "support": 3458.0
       },
       "News": {
-        "precision": 0.6959635416666666,
-        "recall": 0.7808619430241052,
-        "f1-score": 0.7359724612736661,
+        "precision": 0.750599520383693,
+        "recall": 0.6859021183345507,
+        "f1-score": 0.716793893129771,
         "support": 1369.0
       },
-      "accuracy": 0.68597791559522,
+      "accuracy": 0.7094236877930722,
       "macro avg": {
-        "precision": 0.621866335322815,
-        "recall": 0.6566928125844427,
-        "f1-score": 0.6363957395721072,
+        "precision": 0.6886261724559686,
+        "recall": 0.5908260293480957,
+        "f1-score": 0.6229602151920918,
         "support": 6611.0
       },
       "weighted avg": {
-        "precision": 0.7012593673050135,
-        "recall": 0.68597791559522,
-        "f1-score": 0.6907548658638933,
+        "precision": 0.7011113240562487,
+        "recall": 0.7094236877930722,
+        "f1-score": 0.6936726404266584,
         "support": 6611.0
       }
     },
@@ -102,28 +108,28 @@
     ],
     "confusion_matrix": [
       [
-        331,
-        116,
-        98,
-        28
+        232,
+        97,
+        221,
+        23
       ],
       [
-        139,
-        674,
-        295,
-        103
+        55,
+        475,
+        593,
+        88
       ],
       [
-        183,
-        478,
-        2461,
-        336
+        36,
+        177,
+        3044,
+        201
       ],
       [
-        32,
-        87,
-        181,
-        1069
+        16,
+        43,
+        371,
+        939
       ]
     ]
   }
